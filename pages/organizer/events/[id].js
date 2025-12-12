@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 
+
 const CATEGORY_LABELS = {
   famille: "Famille",
   sport: "Sport",
