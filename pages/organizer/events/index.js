@@ -2,7 +2,6 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
-import Header from "../components/Header";
 
 const STATUS_LABELS = {
   en_verification: "En attente",
@@ -21,9 +20,10 @@ export default function AdminEventsListPage() {
   const fetchAllEvents = useCallback(async () => {
     setLoading(true);
 
-    let query = supabase.from("events").select("*").order("created_at", {
-      ascending: false,
-    });
+    let query = supabase
+      .from("events")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (statusFilter !== "all") {
       query = query.eq("status", statusFilter);
@@ -63,7 +63,7 @@ export default function AdminEventsListPage() {
       <div className="h-16" />
 
       <main className="max-w-6xl mx-auto px-4 pb-10">
-        {/* Filtres haut */}
+        {/* Filtres */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
@@ -138,10 +138,7 @@ export default function AdminEventsListPage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="text-center text-gray-500 py-6 text-sm"
-                  >
+                  <td colSpan={5} className="text-center text-gray-500 py-6">
                     Chargement…
                   </td>
                 </tr>
@@ -149,10 +146,7 @@ export default function AdminEventsListPage() {
 
               {!loading && events.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="text-center text-gray-400 py-6 text-sm"
-                  >
+                  <td colSpan={5} className="text-center text-gray-400 py-6">
                     Aucun événement trouvé.
                   </td>
                 </tr>
@@ -163,7 +157,7 @@ export default function AdminEventsListPage() {
                   key={e.id}
                   className="border-t border-gray-100 hover:bg-gray-50"
                 >
-                  <td className="px-3 py-2 max-w-xs truncate">{e.title}</td>
+                  <td className="px-3 py-2 truncate">{e.title}</td>
                   <td className="px-3 py-2">{e.city}</td>
                   <td className="px-3 py-2">
                     {new Date(e.start_date_time).toLocaleString("fr-FR", {
@@ -174,15 +168,7 @@ export default function AdminEventsListPage() {
                     })}
                   </td>
                   <td className="px-3 py-2">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                        e.status === "publie"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : e.status === "refuse"
-                          ? "bg-red-50 text-red-600"
-                          : "bg-yellow-50 text-yellow-700"
-                      }`}
-                    >
+                    <span className="text-xs">
                       {STATUS_LABELS[e.status] || e.status}
                     </span>
                   </td>
