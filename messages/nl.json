@@ -1,0 +1,40 @@
+{
+  "nav.explore": "Ontdekken",
+  "nav.favorites": "Favorieten",
+  "nav.account": "Account",
+  "nav.publish": "Publiceren",
+
+  "search.title": "Vind een evenement bij jou in de buurt",
+  "search.subtitle": "Concerten, familie, vrije tijd… vind je volgende uitje!",
+  "search.city": "Stad",
+  "search.date": "Datum",
+  "search.distance": "Afstand",
+  "search.button": "Zoeken",
+  "search.results": "Resultaten",
+
+  "create.title": "Evenement maken",
+  "create.general": "Algemene informatie",
+  "create.description": "Beschrijving",
+  "create.photo": "Foto",
+  "create.dates": "Data & tijden",
+  "create.location": "Locatie",
+  "create.price": "Prijs",
+  "create.contact": "Contact organisator",
+  "create.publish": "Evenement publiceren",
+
+  "price.free": "Gratis",
+  "price.paid": "Betaald",
+
+  "category.concert": "Concert / Muziek",
+  "category.marche": "Markt / Beurs",
+  "category.atelier": "Workshop",
+  "category.sport": "Sport",
+  "category.soiree": "Feest / Bar / Club",
+  "category.theatre": "Theater / Show",
+  "category.enfants": "Kinderen / Familie",
+  "category.gastronomie": "Gastronomie",
+  "category.noel": "Kerst",
+  "category.halloween": "Halloween",
+  "category.paques": "Pasen",
+  "category.autre": "Overig"
+}

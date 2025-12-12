@@ -1,0 +1,40 @@
+{
+  "nav.explore": "Explorar",
+  "nav.favorites": "Favoritos",
+  "nav.account": "Conta",
+  "nav.publish": "Publicar",
+
+  "search.title": "Encontre um evento perto de você",
+  "search.subtitle": "Concertos, família, lazer… encontre sua próxima saída!",
+  "search.city": "Cidade",
+  "search.date": "Data",
+  "search.distance": "Distância",
+  "search.button": "Pesquisar",
+  "search.results": "Resultados",
+
+  "create.title": "Criar evento",
+  "create.general": "Informações gerais",
+  "create.description": "Descrição",
+  "create.photo": "Foto",
+  "create.dates": "Datas e horários",
+  "create.location": "Local",
+  "create.price": "Preço",
+  "create.contact": "Contato do organizador",
+  "create.publish": "Publicar meu evento",
+
+  "price.free": "Grátis",
+  "price.paid": "Pago",
+
+  "category.concert": "Concerto / Música",
+  "category.marche": "Mercado / Feira",
+  "category.atelier": "Workshop",
+  "category.sport": "Esporte",
+  "category.soiree": "Festa / Bar / Clube",
+  "category.theatre": "Teatro / Espetáculo",
+  "category.enfants": "Crianças / Família",
+  "category.gastronomie": "Gastronomia",
+  "category.noel": "Natal",
+  "category.halloween": "Halloween",
+  "category.paques": "Páscoa",
+  "category.autre": "Outro"
+}

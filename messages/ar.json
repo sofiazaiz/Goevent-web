@@ -1,0 +1,40 @@
+{
+  "nav.explore": "استكشاف",
+  "nav.favorites": "المفضلة",
+  "nav.account": "الحساب",
+  "nav.publish": "نشر",
+
+  "search.title": "اعثر على حدث بالقرب منك",
+  "search.subtitle": "حفلات، عائلة، ترفيه… اكتشف نشاطك القادم!",
+  "search.city": "المدينة",
+  "search.date": "التاريخ",
+  "search.distance": "المسافة",
+  "search.button": "بحث",
+  "search.results": "النتائج",
+
+  "create.title": "إنشاء حدث",
+  "create.general": "معلومات عامة",
+  "create.description": "الوصف",
+  "create.photo": "صورة",
+  "create.dates": "التواريخ والأوقات",
+  "create.location": "المكان",
+  "create.price": "السعر",
+  "create.contact": "جهة الاتصال بالمنظم",
+  "create.publish": "نشر الحدث",
+
+  "price.free": "مجاني",
+  "price.paid": "مدفوع",
+
+  "category.concert": "حفل موسيقي",
+  "category.marche": "سوق / معرض",
+  "category.atelier": "ورشة عمل",
+  "category.sport": "رياضة",
+  "category.soiree": "حفلة / بار / نادي",
+  "category.theatre": "مسرح / عرض",
+  "category.enfants": "أطفال / عائلة",
+  "category.gastronomie": "فنون الطهي",
+  "category.noel": "عيد الميلاد",
+  "category.halloween": "هالوين",
+  "category.paques": "عيد الفصح",
+  "category.autre": "أخرى"
+}

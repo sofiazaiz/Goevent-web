@@ -1,0 +1,40 @@
+{
+  "nav.explore": "Explore",
+  "nav.favorites": "Favorites",
+  "nav.account": "Account",
+  "nav.publish": "Publish",
+
+  "search.title": "Find an event near you",
+  "search.subtitle": "Concerts, family, leisure… find your next outing!",
+  "search.city": "City",
+  "search.date": "Date",
+  "search.distance": "Distance",
+  "search.button": "Search",
+  "search.results": "Results",
+
+  "create.title": "Create an event",
+  "create.general": "General information",
+  "create.description": "Description",
+  "create.photo": "Photo",
+  "create.dates": "Dates & times",
+  "create.location": "Location",
+  "create.price": "Price",
+  "create.contact": "Organizer contact",
+  "create.publish": "Publish my event",
+
+  "price.free": "Free",
+  "price.paid": "Paid",
+
+  "category.concert": "Concert / Music",
+  "category.marche": "Market / Fair",
+  "category.atelier": "Workshop",
+  "category.sport": "Sport",
+  "category.soiree": "Party / Bar / Club",
+  "category.theatre": "Theater / Show",
+  "category.enfants": "Kids / Family",
+  "category.gastronomie": "Gastronomy",
+  "category.noel": "Christmas",
+  "category.halloween": "Halloween",
+  "category.paques": "Easter",
+  "category.autre": "Other"
+}
