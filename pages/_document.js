@@ -11,12 +11,17 @@ export default class MyDocument extends Document {
     return (
       <Html lang={locale} dir={isRTL ? "rtl" : "ltr"}>
         <Head>
-          {/* SEO + Accessibilité */}
+          {/* Meta de base */}
           <meta charSet="utf-8" />
           <meta
             name="viewport"
             content="width=device-width, initial-scale=1"
           />
+
+          {/* Favicon */}
+          <link rel="icon" href="/favicon.ico" />
+          <link rel="icon" type="image/png" href="/favicon.png" sizes="32x32" />
+          <link rel="apple-touch-icon" href="/favicon.png" />
 
           {/* Amélioration rendu RTL */}
           {isRTL && (
