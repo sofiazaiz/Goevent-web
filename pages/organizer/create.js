@@ -36,7 +36,7 @@ export default function CreateEventPage() {
 
   // Récurrence
   const [recurrenceType, setRecurrenceType] = useState("none");
-  const [recurrenceWeekdays, setRecurrenceWeekdays] = useState([]);
+  const [recurrenceWeekdays, setRecurrenceWeekdays] = useState([]); // ⬅️ MULTI
 
   // Charger utilisateur
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function CreateEventPage() {
       }
     }
 
-    // Récurrence
+    // Récurrence MULTI
     let recurrenceRule = null;
     if (recurrenceType === "weekly" && recurrenceWeekdays.length > 0) {
       recurrenceRule = JSON.stringify({
@@ -121,36 +121,69 @@ export default function CreateEventPage() {
   ---------------------------------------------------- */
   return (
     <div className="min-h-screen bg-[#f4f5f7] pb-20">
+      {/* ESPACE HEADER GLOBAL */}
       <div className="h-16" />
 
+      {/* TITRE */}
       <div className="text-center mt-6">
         <h1 className="text-2xl font-bold text-gray-900">
           Créer un événement
         </h1>
       </div>
 
+      {/* CONTAINER */}
       <div className="max-w-3xl mx-auto bg-white shadow-md rounded-2xl p-6 border border-gray-100 mt-6">
         <h2 className="text-xl font-bold mb-4">Informations générales</h2>
 
-        <input className="input" placeholder="Titre de l’événement *" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input
+          className="input"
+          placeholder="Titre de l’événement *"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
         <h3 className="font-semibold mt-4 mb-2">Catégories</h3>
         <CategorySelector selected={categories} onChange={setCategories} />
 
-        <textarea className="input h-24" placeholder="Description *" value={description} onChange={(e) => setDescription(e.target.value)} />
+        <textarea
+          className="input h-24"
+          placeholder="Description *"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
 
         <h2 className="text-xl font-bold mt-6 mb-3">Photo</h2>
-        <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setImageFile(e.target.files[0])}
+        />
 
-        {imageFile && <img src={URL.createObjectURL(imageFile)} alt="preview" className="w-full h-52 object-cover rounded-xl mt-3" />}
+        {imageFile && (
+          <img
+            src={URL.createObjectURL(imageFile)}
+            alt="preview"
+            className="w-full h-52 object-cover rounded-xl mt-3"
+          />
+        )}
 
         <h2 className="text-xl font-bold mt-6 mb-3">Dates & horaires</h2>
 
         <label className="small-label">Début *</label>
-        <input type="datetime-local" className="input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+        <input
+          type="datetime-local"
+          className="input"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+        />
 
         <label className="small-label mt-2">Fin (optionnel)</label>
-        <input type="datetime-local" className="input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        <input
+          type="datetime-local"
+          className="input"
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+        />
 
         <h2 className="text-xl font-bold mt-6 mb-3">Récurrence</h2>
 
@@ -160,14 +193,18 @@ export default function CreateEventPage() {
               setRecurrenceType("none");
               setRecurrenceWeekdays([]);
             }}
-            className={`toggle ${recurrenceType === "none" ? "toggle-active" : ""}`}
+            className={`toggle ${
+              recurrenceType === "none" ? "toggle-active" : ""
+            }`}
           >
             Pas de récurrence
           </button>
 
           <button
             onClick={() => setRecurrenceType("weekly")}
-            className={`toggle ${recurrenceType === "weekly" ? "toggle-active" : ""}`}
+            className={`toggle ${
+              recurrenceType === "weekly" ? "toggle-active" : ""
+            }`}
           >
             Hebdomadaire
           </button>
@@ -176,16 +213,20 @@ export default function CreateEventPage() {
         {recurrenceType === "weekly" && (
           <div className="flex flex-wrap gap-2 mt-3">
             {WEEKDAYS.map((d) => {
-              const isActive = recurrenceWeekdays.includes(d.value);
+              const active = recurrenceWeekdays.includes(d.value);
               return (
                 <button
                   key={d.value}
-                  onClick={() =>
+                  onClick={() => {
                     setRecurrenceWeekdays((prev) =>
-                      isActive ? prev.filter((v) => v !== d.value) : [...prev, d.value]
-                    )
-                  }
-                  className={`weekday ${isActive ? "weekday-active" : ""}`}
+                      prev.includes(d.value)
+                        ? prev.filter((v) => v !== d.value)
+                        : [...prev, d.value]
+                    );
+                  }}
+                  className={`weekday ${
+                    active ? "weekday-active" : ""
+                  }`}
                 >
                   {d.label}
                 </button>
@@ -194,7 +235,87 @@ export default function CreateEventPage() {
           </div>
         )}
 
-        <button onClick={handleSubmit} className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl mt-6">
+        <h2 className="text-xl font-bold mt-6 mb-3">Lieu</h2>
+
+        <input
+          className="input"
+          placeholder="Adresse complète *"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
+
+        <input
+          className="input"
+          placeholder="Ville"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+        />
+
+        <input
+          className="input"
+          placeholder="Nom du lieu"
+          value={placeName}
+          onChange={(e) => setPlaceName(e.target.value)}
+        />
+
+        <h2 className="text-xl font-bold mt-6 mb-3">Prix</h2>
+
+        <div className="flex gap-3">
+          <button
+            onClick={() => setPriceType("gratuit")}
+            className={`toggle ${
+              priceType === "gratuit" ? "toggle-active" : ""
+            }`}
+          >
+            Gratuit
+          </button>
+
+          <button
+            onClick={() => setPriceType("payant")}
+            className={`toggle ${
+              priceType === "payant" ? "toggle-active" : ""
+            }`}
+          >
+            Payant
+          </button>
+        </div>
+
+        {priceType === "payant" && (
+          <input
+            className="input mt-3"
+            placeholder="Prix (€)"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+          />
+        )}
+
+        <input
+          className="input mt-2"
+          placeholder="Lien billetterie"
+          value={ticketsUrl}
+          onChange={(e) => setTicketsUrl(e.target.value)}
+        />
+
+        <h2 className="text-xl font-bold mt-6 mb-3">Contact</h2>
+
+        <input
+          className="input"
+          placeholder="Nom"
+          value={contactName}
+          onChange={(e) => setContactName(e.target.value)}
+        />
+
+        <input
+          className="input"
+          placeholder="Email"
+          value={contactEmail}
+          onChange={(e) => setContactEmail(e.target.value)}
+        />
+
+        <button
+          onClick={handleSubmit}
+          className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl mt-6 hover:bg-blue-700 transition"
+        >
           Publier mon événement
         </button>
       </div>
