@@ -28,6 +28,7 @@ export default function CreateEventPage() {
   const [ticketsUrl, setTicketsUrl] = useState("");
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState(""); // ✅ AJOUT TEL
   const [imageFile, setImageFile] = useState(null);
 
   // Dates
@@ -101,6 +102,7 @@ export default function CreateEventPage() {
       tickets_url: ticketsUrl || null,
       contact_name: contactName,
       contact_email: contactEmail,
+      contact_phone: contactPhone || null, // ✅ ENVOI TEL
       visibility_mode: "publie",
       status: "en_verification",
       image_url: imageUrl,
@@ -224,9 +226,7 @@ export default function CreateEventPage() {
                         : [...prev, d.value]
                     );
                   }}
-                  className={`weekday ${
-                    active ? "weekday-active" : ""
-                  }`}
+                  className={`weekday ${active ? "weekday-active" : ""}`}
                 >
                   {d.label}
                 </button>
@@ -310,6 +310,13 @@ export default function CreateEventPage() {
           placeholder="Email"
           value={contactEmail}
           onChange={(e) => setContactEmail(e.target.value)}
+        />
+
+        <input
+          className="input"
+          placeholder="Téléphone (optionnel)"
+          value={contactPhone}
+          onChange={(e) => setContactPhone(e.target.value)}
         />
 
         <button

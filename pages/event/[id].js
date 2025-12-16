@@ -8,6 +8,9 @@ export default function EventDetailPage() {
 
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null); // ⬅️ utilisateur connecté
+
+  const ADMIN_EMAIL = "sofia.zaiz14@hotmail.com";
 
   const WEEKDAYS_FR = [
     "dimanche",
@@ -18,6 +21,15 @@ export default function EventDetailPage() {
     "vendredi",
     "samedi",
   ];
+
+  // ---------------------------
+  // Charger l’utilisateur connecté
+  // ---------------------------
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user || null);
+    });
+  }, []);
 
   // ---------------------------
   // Charger l’événement
@@ -59,16 +71,35 @@ export default function EventDetailPage() {
   }
 
   // ---------------------------
-  // RÉCURRENCE
+  // RÉCURRENCE (CORRIGÉ)
   // ---------------------------
   let recurrenceText = null;
+
   if (event.recurrence_rule) {
     try {
       const rule = JSON.parse(event.recurrence_rule);
+
       if (rule.type === "weekly") {
-        recurrenceText = `Tous les ${WEEKDAYS_FR[rule.weekday]}s`;
+        let days = [];
+
+        // Nouveau format (plusieurs jours)
+        if (Array.isArray(rule.weekdays)) {
+          days = rule.weekdays;
+        }
+
+        // Ancien format (sécurité)
+        if (typeof rule.weekday === "number") {
+          days = [rule.weekday];
+        }
+
+        if (days.length > 0) {
+          const labels = days.map((d) => WEEKDAYS_FR[d]);
+          recurrenceText = `Tous les ${labels.join(", ")}`;
+        }
       }
-    } catch {}
+    } catch (e) {
+      console.error("Erreur parsing recurrence_rule", e);
+    }
   }
 
   // ---------------------------
@@ -81,6 +112,11 @@ export default function EventDetailPage() {
       "_blank"
     );
   };
+
+  // ---------------------------
+  // ADMIN ?
+  // ---------------------------
+  const isAdmin = user && user.email === ADMIN_EMAIL;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -105,6 +141,20 @@ export default function EventDetailPage() {
         >
           ← Retour
         </button>
+
+        {/* BOUTON ADMIN MODIFIER */}
+        {isAdmin && (
+          <div className="mb-4">
+            <button
+              onClick={() =>
+                router.push(`/organizer/events/edit/${event.id}`)
+              }
+              className="inline-flex items-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition"
+            >
+              ✏️ Modifier l’événement
+            </button>
+          </div>
+        )}
 
         {/* TITRE + CATÉGORIE */}
         <div className="flex items-start justify-between gap-4">
