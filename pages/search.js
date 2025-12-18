@@ -14,6 +14,81 @@ export default function SearchPage() {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const WEEKDAYS_FR = [
+    "dimanche",
+    "lundi",
+    "mardi",
+    "mercredi",
+    "jeudi",
+    "vendredi",
+    "samedi",
+  ];
+
+  const getStartEndOfDayISO = (yyyyMmDd) => {
+    // yyyyMmDd = "2025-12-01"
+    const [y, m, d] = yyyyMmDd.split("-").map(Number);
+
+    const start = new Date(y, m - 1, d, 0, 0, 0, 0);
+    const end = new Date(y, m - 1, d, 23, 59, 59, 999);
+
+    return { startISO: start.toISOString(), endISO: end.toISOString(), start, end };
+  };
+
+  const getWeekdayFromDateString = (yyyyMmDd) => {
+    const [y, m, d] = yyyyMmDd.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    return dt.getDay(); // 0..6 (Dim..Sam)
+  };
+
+  const normalizeWeeklyDays = (recurrence_rule) => {
+    try {
+      const rule = typeof recurrence_rule === "string" ? JSON.parse(recurrence_rule) : recurrence_rule;
+      if (!rule || rule.type !== "weekly") return [];
+      if (Array.isArray(rule.weekdays)) return rule.weekdays;
+      if (typeof rule.weekday === "number") return [rule.weekday];
+      return [];
+    } catch {
+      return [];
+    }
+  };
+
+  const eventMatchesSelectedDate = (ev, yyyyMmDd) => {
+    if (!yyyyMmDd) return true;
+
+    const { start, end } = getStartEndOfDayISO(yyyyMmDd);
+    const selectedWeekday = getWeekdayFromDateString(yyyyMmDd);
+
+    const evStart = ev.start_date_time ? new Date(ev.start_date_time) : null;
+    const evEnd = ev.end_date_time ? new Date(ev.end_date_time) : null;
+
+    // Sécurité si pas de start_date_time
+    if (!evStart) return false;
+
+    // Si récurrence hebdomadaire : présent seulement si le jour match + dans la fenêtre start/end
+    if (ev.recurrence_rule) {
+      const days = normalizeWeeklyDays(ev.recurrence_rule)
+        .filter((d) => typeof d === "number" && d >= 0 && d <= 6);
+
+      if (days.length === 0) return false;
+
+      const inWindow =
+        evStart <= end && (evEnd ? evEnd >= start : true);
+
+      if (!inWindow) return false;
+
+      return days.includes(selectedWeekday);
+    }
+
+    // Sans récurrence :
+    // - si end_date_time existe => événement multi-jours => overlap
+    if (evEnd) {
+      return evStart <= end && evEnd >= start;
+    }
+
+    // - sinon => événement "ponctuel" => doit démarrer dans la journée
+    return evStart >= start && evStart <= end;
+  };
+
   /* -------------------------------
      FAVORIS
   ------------------------------- */
@@ -69,14 +144,28 @@ export default function SearchPage() {
     if (query) req = req.ilike("city", `%${query}%`);
     if (categories.length > 0) req = req.in("category", categories);
 
+    // ✅ Filtre date (supporte événements multi-jours + récurrence hebdo côté JS)
     if (selectedDate) {
+      const { startISO, endISO } = getStartEndOfDayISO(selectedDate);
+
+      // On récupère les événements qui peuvent POTENTIELLEMENT toucher cette journée :
+      // start_date_time <= fin de journée
+      // et (end_date_time est NULL OU end_date_time >= début de journée)
       req = req
-        .gte("start_date_time", `${selectedDate}T00:00:00`)
-        .lte("start_date_time", `${selectedDate}T23:59:59`);
+        .lte("start_date_time", endISO)
+        .or(`end_date_time.is.null,end_date_time.gte.${startISO}`);
     }
 
     const { data } = await req;
-    setEvents(data || []);
+
+    let finalEvents = data || [];
+
+    // ✅ Filtrage fin côté front (récurrence hebdo + éviter les faux positifs)
+    if (selectedDate) {
+      finalEvents = finalEvents.filter((ev) => eventMatchesSelectedDate(ev, selectedDate));
+    }
+
+    setEvents(finalEvents);
     setLoading(false);
   }, [query, categories, selectedDate]);
 
