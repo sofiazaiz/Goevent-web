@@ -23,6 +23,7 @@ const TABS = [
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [authorized, setAuthorized] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -42,47 +43,63 @@ export default function DashboardPage() {
   });
 
   // ------------------------------------------------
-  // 🔐 CHECK ADMIN (UNE SEULE FOIS)
+  // 🔐 CHECK ADMIN
   // ------------------------------------------------
   useEffect(() => {
+    let cancelled = false;
+
     const checkAdmin = async () => {
-      const { data } = await supabase.auth.getUser();
+      try {
+        const { data, error } = await supabase.auth.getUser();
 
-      if (!data.user) {
+        if (cancelled) return;
+
+        if (error || !data?.user) {
+          setUser(null);
+          setAuthorized(false);
+          setCheckingAuth(false);
+          window.location.href = "/account/login";
+          return;
+        }
+
+        setUser(data.user);
+
+        if (data.user.id !== ADMIN_ID) {
+          setAuthorized(false);
+          setCheckingAuth(false);
+          window.location.href = "/";
+          return;
+        }
+
+        setAuthorized(true);
+        setCheckingAuth(false);
+      } catch (e) {
+        console.log("Erreur checkAdmin", e);
+        setUser(null);
+        setAuthorized(false);
+        setCheckingAuth(false);
         window.location.href = "/account/login";
-        return;
       }
-
-      setUser(data.user);
-
-      if (data.user.id !== ADMIN_ID) {
-        window.location.href = "/";
-        return;
-      }
-
-      setAuthorized(true);
     };
 
     checkAdmin();
-  }, []);
 
-  if (!user || !authorized) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Chargement…
-      </div>
-    );
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // ------------------------------------------------
   // STATS
   // ------------------------------------------------
   const fetchStats = useCallback(async () => {
-    const { data } = await supabase
+    if (!authorized) return;
+
+    const { data, error } = await supabase
       .from("events")
       .select("id, status, organizer_id");
 
-    if (!data) return;
+    if (error || !data) return;
 
     const total = data.length;
     const pending = data.filter((e) => e.status === "en_verification").length;
@@ -100,12 +117,14 @@ export default function DashboardPage() {
       refused,
       activeOrganizers: organizersSet.size,
     });
-  }, []);
+  }, [authorized]);
 
   // ------------------------------------------------
   // EVENTS
   // ------------------------------------------------
   const fetchEvents = useCallback(async () => {
+    if (!authorized) return;
+
     setLoading(true);
 
     let query = supabase
@@ -124,46 +143,69 @@ export default function DashboardPage() {
         .lte("start_date_time", `${dateFilter}T23:59:59`);
     }
 
-    const { data } = await query;
-    setEvents(data || []);
+    const { data, error } = await query;
+
+    if (!error) setEvents(data || []);
     setLoading(false);
-  }, [activeTab, cityFilter, titleSearch, categoryFilter, dateFilter]);
+  }, [authorized, activeTab, cityFilter, titleSearch, categoryFilter, dateFilter]);
 
-  const moderate = async (id, status) => {
-    await supabase.from("events").update({ status }).eq("id", id);
-    setEvents((prev) => prev.filter((e) => e.id !== id));
-    fetchStats();
-  };
+  const moderate = useCallback(
+    async (id, status) => {
+      if (!authorized) return;
+
+      const { error } = await supabase.from("events").update({ status }).eq("id", id);
+      if (error) {
+        alert("Erreur de modération");
+        return;
+      }
+
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+      fetchStats();
+    },
+    [authorized, fetchStats]
+  );
 
   useEffect(() => {
+    if (!authorized) return;
     fetchStats();
-  }, [fetchStats]);
+  }, [authorized, fetchStats]);
 
   useEffect(() => {
+    if (!authorized) return;
     fetchEvents();
-  }, [fetchEvents]);
+  }, [authorized, fetchEvents]);
 
   // ------------------------------------------------
-  // PAGE
+  // ✅ RENDER (on met les returns ICI, après les hooks)
   // ------------------------------------------------
+  if (checkingAuth || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
+        Chargement…
+      </div>
+    );
+  }
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
+        Accès refusé.
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f5f7fa]">
-
-      {/* ESPACE HEADER GLOBAL */}
       <div className="h-16" />
 
       <main className="max-w-6xl mx-auto px-4 pb-10">
-        {/* TITRE */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl font-bold text-gray-900">
-            Console administrateur
-          </h1>
+          <h1 className="text-xl font-bold text-gray-900">Console administrateur</h1>
           <Link href="/search" className="text-sm text-blue-600 hover:underline">
             ← Retour au site
           </Link>
         </div>
 
-        {/* STATS */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <StatCard label="Total événements" value={stats.total} />
           <StatCard label="En attente" value={stats.pending} accent="yellow" />
@@ -171,7 +213,6 @@ export default function DashboardPage() {
           <StatCard label="Organisateurs actifs" value={stats.activeOrganizers} />
         </section>
 
-        {/* TABS + FILTRES */}
         <section className="bg-white rounded-2xl border shadow-sm p-5 mb-6">
           <div className="flex flex-wrap gap-2 mb-4">
             {TABS.map((tab) => (
@@ -209,7 +250,9 @@ export default function DashboardPage() {
             >
               <option value="all">Toutes</option>
               {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>
+                  {v}
+                </option>
               ))}
             </select>
             <input
@@ -219,17 +262,29 @@ export default function DashboardPage() {
               className="input"
             />
           </div>
+
+          <div className="flex justify-end mt-3">
+            <button
+              onClick={fetchEvents}
+              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
+            >
+              Filtrer
+            </button>
+          </div>
         </section>
 
-        {/* LISTE */}
         {loading && <p className="text-center text-gray-500">Chargement…</p>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {events.map((event) => (
-            <div key={event.id} className="bg-white rounded-xl border shadow-sm overflow-hidden">
+            <div
+              key={event.id}
+              className="bg-white rounded-xl border shadow-sm overflow-hidden"
+            >
               <img
                 src={event.image_url || "/placeholder.jpg"}
                 className="h-32 w-full object-cover"
+                alt=""
               />
 
               <div className="p-4">
@@ -280,7 +335,6 @@ export default function DashboardPage() {
   );
 }
 
-// ------------------------------------
 function StatCard({ label, value, accent = "blue" }) {
   const color =
     accent === "yellow"
