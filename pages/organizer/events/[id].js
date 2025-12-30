@@ -1,8 +1,10 @@
+// pages/organizer/events/[id].js
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { supabase } from "../../../lib/supabase";
 
+const ADMIN_ID = "6554f8ad-e6ca-47b5-8a29-f899860769e9";
 
 const CATEGORY_LABELS = {
   famille: "Famille",
@@ -24,30 +26,127 @@ export default function EventDetailAdminPage() {
   const router = useRouter();
   const { id } = router.query;
 
+  const [authorized, setAuthorized] = useState(false);
+
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchEvent = async (eventId) => {
-    const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .eq("id", eventId)
-      .single();
+  // ✅ normalise id (Next peut donner string | string[])
+  const eventId = Array.isArray(id) ? id[0] : id;
 
-    if (!error) setEvent(data);
-    setLoading(false);
-  };
+  // ------------------------------------------------
+  // 🔐 SECURISER LA SESSION + CHECK ADMIN
+  // ------------------------------------------------
+  useEffect(() => {
+    const protect = async () => {
+      try {
+        // 1) session
+        const { data: sessionData, error: sessionErr } =
+          await supabase.auth.getSession();
+
+        if (sessionErr || !sessionData?.session) {
+          // sécurité : si token cassé / pas de session -> login
+          try {
+            await supabase.auth.signOut();
+          } catch {}
+          router.replace("/account/login");
+          return;
+        }
+
+        // 2) user
+        const { data: userData, error: userErr } =
+          await supabase.auth.getUser();
+
+        if (userErr || !userData?.user) {
+          try {
+            await supabase.auth.signOut();
+          } catch {}
+          router.replace("/account/login");
+          return;
+        }
+
+        // 3) admin
+        if (userData.user.id !== ADMIN_ID) {
+          router.replace("/");
+          return;
+        }
+
+        setAuthorized(true);
+      } catch (e) {
+        // dernier filet de sécurité
+        try {
+          await supabase.auth.signOut();
+        } catch {}
+        router.replace("/account/login");
+      }
+    };
+
+    if (router.isReady) protect();
+  }, [router.isReady, router]);
+
+  // ------------------------------------------------
+  // 📥 CHARGER EVENEMENT (seulement si autorisé)
+  // ------------------------------------------------
+  const fetchEvent = useCallback(async (idToFetch) => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("id", idToFetch)
+        .single();
+
+      if (error) {
+        console.log("fetchEvent error:", error);
+        setEvent(null);
+      } else {
+        setEvent(data || null);
+      }
+    } catch (e) {
+      console.log("fetchEvent crash:", e);
+      setEvent(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (id) fetchEvent(id);
-  }, [id]);
+    // ✅ évite les crashs : on attend router + admin + eventId
+    if (!router.isReady) return;
+    if (!authorized) return;
+    if (!eventId) return;
+
+    fetchEvent(eventId);
+  }, [router.isReady, authorized, eventId, fetchEvent]);
 
   const moderate = async (status) => {
     if (!event) return;
 
-    await supabase.from("events").update({ status }).eq("id", event.id);
-    setEvent({ ...event, status });
+    try {
+      const { error } = await supabase
+        .from("events")
+        .update({ status })
+        .eq("id", event.id);
+
+      if (error) {
+        alert("Erreur lors de la mise à jour du statut.");
+        return;
+      }
+
+      setEvent((prev) => ({ ...prev, status }));
+    } catch (e) {
+      alert("Erreur lors de la mise à jour du statut.");
+    }
   };
+
+  // ✅ Tant que la protection n’a pas fini, on évite de rendre la page
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600">
+        Chargement…
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -90,7 +189,7 @@ export default function EventDetailAdminPage() {
           <div className="relative h-56 w-full bg-gray-100">
             <img
               src={event.image_url || "/placeholder.jpg"}
-              alt={event.title}
+              alt={event.title || "Événement"}
               className="w-full h-full object-cover"
             />
 
@@ -126,16 +225,17 @@ export default function EventDetailAdminPage() {
               <div className="space-y-1">
                 <h3 className="font-semibold text-gray-800">Infos pratiques</h3>
                 <p>📍 {event.place_name || "Lieu non précisé"}</p>
-                <p>{event.address_full}</p>
-                <p>{event.city}</p>
+                <p>{event.address_full || ""}</p>
+                <p>{event.city || ""}</p>
               </div>
 
               <div className="space-y-1">
                 <h3 className="font-semibold text-gray-800">Dates</h3>
                 <p>
                   Début :{" "}
-                  {event.start_date_time &&
-                    new Date(event.start_date_time).toLocaleString("fr-FR")}
+                  {event.start_date_time
+                    ? new Date(event.start_date_time).toLocaleString("fr-FR")
+                    : "Non renseignée"}
                 </p>
                 <p>
                   Fin :{" "}
@@ -144,7 +244,7 @@ export default function EventDetailAdminPage() {
                     : "Non renseignée"}
                 </p>
                 {event.recurrence_rule && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 break-all">
                     Récurrence : {event.recurrence_rule}
                   </p>
                 )}
@@ -157,9 +257,7 @@ export default function EventDetailAdminPage() {
                   {event.price_type === "payant" ? "Payant" : "Gratuit"}
                 </p>
                 {event.price_type === "payant" && (
-                  <p>
-                    Prix : {event.price ? `${event.price} €` : "Non précisé"}
-                  </p>
+                  <p>Prix : {event.price ? `${event.price} €` : "Non précisé"}</p>
                 )}
                 {event.tickets_url && (
                   <p>
@@ -193,8 +291,9 @@ export default function EventDetailAdminPage() {
         <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
           <div className="text-xs text-gray-500">
             Dernière mise à jour :{" "}
-            {event.updated_at &&
-              new Date(event.updated_at).toLocaleString("fr-FR")}
+            {event.updated_at
+              ? new Date(event.updated_at).toLocaleString("fr-FR")
+              : "—"}
           </div>
 
           <div className="flex gap-3">
