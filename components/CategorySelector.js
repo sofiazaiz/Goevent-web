@@ -13,6 +13,7 @@ import {
   Ghost,
   Rabbit,
   CircleDashed,
+  Gamepad2,
 } from "lucide-react";
 
 // 🔹 Config officielle des catégories GoEvent (alignée avec l'app)
@@ -21,6 +22,7 @@ const CATEGORY_CONFIG = [
   { key: "marche", label: "Marché / Salon", Icon: ShoppingBag },
   { key: "atelier", label: "Atelier / Workshop", Icon: Wrench },
   { key: "sport", label: "Sport", Icon: Dumbbell },
+  { key: "loisirs", label: "Loisirs", Icon: Gamepad2 },
   { key: "soiree", label: "Soirée / Bar / Club", Icon: Martini },
   { key: "theatre", label: "Théâtre / Spectacle", Icon: Drama },
   { key: "enfants", label: "Enfants / Famille", Icon: Baby },
